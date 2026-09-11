@@ -1,0 +1,13 @@
+# Copy to .dev.vars (never commit that file). All keys are free-tier, no credit card.
+# Required
+BOT_TOKEN=123456:ABC-your-telegram-bot-token          # @BotFather on Telegram
+# Strongly recommended (traffic + map snapshot + reverse-geocode fallback)
+TOMTOM_KEY=                                           # developer.tomtom.com — 2,500 req/day free
+# Fallbacks / extra coverage (each optional; the bot degrades gracefully)
+HERE_KEY=                                             # platform.here.com — ~30k tx/month free
+TRANSITLAND_KEY=                                      # transit.land — free API key (Dubai RTA departures)
+BESTTIME_KEY=                                         # besttime.app — private key, ~100 free credits
+GEOAPIFY_KEY=                                         # geoapify.com — 3,000 req/day free (crowd heuristic POIs)
+MAPBOX_TOKEN=                                         # mapbox.com — live-traffic map snapshot (navigation style)
+# Production webhook protection (any random string; also passed to setWebhook)
+WEBHOOK_SECRET=

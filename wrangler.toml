@@ -1,0 +1,14 @@
+# Cloudflare Workers config — deploy with `npx wrangler deploy`
+# Secrets (set once with `npx wrangler secret put <NAME>`):
+#   BOT_TOKEN, WEBHOOK_SECRET, TOMTOM_KEY, HERE_KEY, TRANSITLAND_KEY,
+#   BESTTIME_KEY, GEOAPIFY_KEY, MAPBOX_TOKEN
+name = "uae-pulse-bot"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+# Create with: npx wrangler kv namespace create PULSE_KV
+# then paste the generated id below. The bot still works without KV
+# (falls back to per-instance memory cache), but KV stretches free API quotas.
+# [[kv_namespaces]]
+# binding = "PULSE_KV"
+# id = "PASTE_KV_NAMESPACE_ID_HERE"

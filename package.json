@@ -1,0 +1,25 @@
+{
+  "name": "uae-pulse-bot",
+  "version": "1.0.0",
+  "description": "On-demand Telegram bot for the UAE: live traffic (map snapshot), upcoming public transport, and unusually crowded places near your GPS location. Request-driven — never spams.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:poll": "tsx src/poll.ts",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "@types/node": "^22.20.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^3.80.0"
+  }
+}
