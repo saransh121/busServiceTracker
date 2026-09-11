@@ -16,11 +16,13 @@ The bot sends a Telegram keyboard button built with `request_location`. You tap 
 
 | Data | Primary | Fallback | Last resort |
 |---|---|---|---|
-| Traffic | TomTom (live) | HERE (live) | friendly error |
+| Traffic | TomTom (live) | HERE (live) | Waze live-map feed — keyless, unofficial, often blocked |
 | Traffic map | Mapbox navigation style (live traffic colors) | TomTom static map | text only |
 | Transit | Transitland — Dubai RTA GTFS (Dubai) | HERE Transit (other emirates) | Nearest stops from OpenStreetMap + official app links |
-| Crowds | BestTime.app live foot traffic (budget-guarded) | Estimated: Geoapify POIs + live congestion + time-of-day | friendly error |
+| Crowds | BestTime.app live foot traffic (budget-guarded) | 🔥 "Nuke option": scrape Google's "Currently X% busy" from search results — unofficial, ToS-gray, bails instantly when captcha-blocked | Estimated: POIs (Geoapify, or keyless OSM) + live congestion + time-of-day |
 | Reverse geocode | Nominatim (OSM) | TomTom | offline emirate bounding boxes |
+
+Known reality check (tested Sep 2026): Waze's web feed returns 403 for non-partners and Google captcha-blocks most non-browser scrapes — both are wired in as opportunistic attempts that fail fast into the next provider, never as something the bot depends on. Crowds and transit work with **zero keys** via the OSM paths.
 
 Honesty notes: traffic and map colors are genuinely **live**; UAE transit times are **scheduled** (no UAE authority publishes an open real-time feed yet) and the bot says so; estimated crowd data is always labeled *estimated*.
 

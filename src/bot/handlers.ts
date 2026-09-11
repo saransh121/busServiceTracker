@@ -148,7 +148,7 @@ export function createBot(env: Env, kv: KVLike): Bot {
       try {
         await ctx.replyWithChatAction("typing");
         const traffic = await getTraffic(env, kv, loc.lat, loc.lon).catch(() => null);
-        const crowds = await getCrowds(env, kv, loc.lat, loc.lon, traffic?.data);
+        const crowds = await getCrowds(env, kv, loc.lat, loc.lon, traffic?.data, place);
         await ctx.reply(formatCrowds(crowds.data, place, crowds.provider), {
           parse_mode: "HTML",
         });

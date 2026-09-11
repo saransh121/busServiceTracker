@@ -3,15 +3,22 @@ import { cached, type KVLike } from "../core/cache";
 import { withFallback, type FallbackResult, type Provider } from "../core/fallback";
 import { geohash } from "../core/geo";
 import { besttimeCrowds } from "../providers/crowds/besttime";
+import { googleBusyCrowds } from "../providers/crowds/googleBusy";
 import { heuristicCrowds } from "../providers/crowds/heuristic";
-import type { CrowdData, TrafficData } from "../types";
+import type { CrowdData, PlaceInfo, TrafficData } from "../types";
 
+/**
+ * Chain: BestTime live (real, budget-guarded) → Google busyness scrape
+ * (real but unofficial "nuke option") → labeled estimate (Geoapify or keyless
+ * OSM venues + traffic + time-of-day). Works with zero API keys.
+ */
 export async function getCrowds(
   env: Env,
   kv: KVLike,
   lat: number,
   lon: number,
   traffic?: TrafficData,
+  place?: PlaceInfo,
 ): Promise<FallbackResult<CrowdData>> {
   const key = `cache:crowds:${geohash(lat, lon)}`;
   return cached(kv, key, 900, () => {
@@ -22,14 +29,15 @@ export async function getCrowds(
         fn: () => besttimeCrowds(env.BESTTIME_KEY!, kv, lat, lon),
       });
     }
-    if (env.GEOAPIFY_KEY) {
-      providers.push({
-        name: "Estimated (Geoapify + traffic)",
-        fn: () => heuristicCrowds(env.GEOAPIFY_KEY!, lat, lon, traffic),
-      });
-    }
-    if (providers.length === 0) throw new Error("no crowd data keys configured");
-    // BestTime polls its async job, so allow a generous timeout
+    providers.push({
+      name: "Google busyness (unofficial)",
+      fn: () => googleBusyCrowds(env.GEOAPIFY_KEY, lat, lon, place?.city ?? place?.emirate),
+    });
+    providers.push({
+      name: "Estimated",
+      fn: () => heuristicCrowds(env.GEOAPIFY_KEY, lat, lon, traffic),
+    });
+    // BestTime polls an async job and the scraper visits several pages
     return withFallback(providers, 25000);
   });
 }

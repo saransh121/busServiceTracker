@@ -18,11 +18,15 @@ export function congestionLabel(flowRatio: number): { emoji: string; label: stri
 
 export function formatTraffic(data: TrafficData, place: PlaceInfo, provider: string): string {
   const { emoji, label } = congestionLabel(data.flowRatio);
+  const speeds =
+    data.freeFlowSpeedKmh > 0
+      ? ` — ${Math.round(data.currentSpeedKmh)} km/h now vs ${Math.round(
+          data.freeFlowSpeedKmh,
+        )} km/h free-flow`
+      : "";
   const lines = [
     `🚦 <b>Traffic near ${placeLine(place)}</b>`,
-    `${emoji} <b>${label}</b> — ${Math.round(data.currentSpeedKmh)} km/h now vs ${Math.round(
-      data.freeFlowSpeedKmh,
-    )} km/h free-flow (${Math.round(data.flowRatio * 100)}%)`,
+    `${emoji} <b>${label}</b>${speeds} (${Math.round(data.flowRatio * 100)}% of normal speed)`,
   ];
   if (data.incidents.length > 0) {
     lines.push("", "<b>Incidents nearby:</b>");

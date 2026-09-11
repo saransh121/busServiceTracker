@@ -4,6 +4,7 @@ import { withFallback, type FallbackResult, type Provider } from "../core/fallba
 import { geohash } from "../core/geo";
 import { hereTraffic } from "../providers/traffic/here";
 import { tomtomTraffic } from "../providers/traffic/tomtom";
+import { wazeTraffic } from "../providers/traffic/waze";
 import { mapboxTrafficImage } from "../providers/map/mapboxStatic";
 import { tomtomStaticImage } from "../providers/map/tomtomStatic";
 import type { TrafficData } from "../types";
@@ -23,7 +24,8 @@ export async function getTraffic(
     if (env.HERE_KEY) {
       providers.push({ name: "HERE", fn: () => hereTraffic(env.HERE_KEY!, lat, lon) });
     }
-    if (providers.length === 0) throw new Error("no traffic API keys configured");
+    // Keyless last resort — unofficial Waze live-map feed
+    providers.push({ name: "Waze (unofficial)", fn: () => wazeTraffic(lat, lon) });
     return withFallback(providers);
   });
 }
