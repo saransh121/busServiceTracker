@@ -48,6 +48,8 @@ export async function googleBusyCrowds(
       results.push({
         name: v.name,
         address: v.address,
+        lat: v.lat,
+        lon: v.lon,
         liveBusyness: live,
         usualBusyness: usual,
         unusuallyBusy:

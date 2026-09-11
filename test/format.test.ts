@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { congestionLabel, escapeHtml, formatCrowds, formatTraffic, formatTransit } from "../src/format";
+import { congestionLabel, escapeHtml, formatCrowds, formatTraffic, formatTransit, mapsUrl } from "../src/format";
 import type { CrowdData, PlaceInfo, TrafficData, TransitData } from "../src/types";
 
 const place: PlaceInfo = { area: "Downtown", city: "Dubai", emirate: "Dubai" };
@@ -66,19 +66,33 @@ describe("formatTransit", () => {
   });
 });
 
+describe("mapsUrl", () => {
+  it("pins exact coordinates when available", () => {
+    expect(mapsUrl({ name: "Dubai Mall", lat: 25.1975, lon: 55.2796, unusuallyBusy: false, estimated: false })).toBe(
+      "https://www.google.com/maps/search/?api=1&query=25.1975%2C55.2796",
+    );
+  });
+  it("falls back to a name+city search", () => {
+    const url = mapsUrl({ name: "Dubai Mall", unusuallyBusy: false, estimated: false }, place);
+    expect(url).toContain("query=Dubai%20Mall%20Dubai");
+  });
+});
+
 describe("formatCrowds", () => {
-  it("highlights unusually busy venues", () => {
+  it("highlights unusually busy venues with Google Maps links and webcams", () => {
     const data: CrowdData = {
       estimated: false,
       venues: [
-        { name: "Dubai Mall", liveBusyness: 92, usualBusyness: 60, unusuallyBusy: true, estimated: false },
+        { name: "Dubai Mall", lat: 25.1975, lon: 55.2796, liveBusyness: 92, usualBusyness: 60, unusuallyBusy: true, estimated: false },
         { name: "Quiet Cafe", liveBusyness: 20, unusuallyBusy: false, estimated: false },
       ],
+      webcams: [{ title: "Downtown Cam", url: "https://windy.com/webcams/123" }],
     };
     const s = formatCrowds(data, place, "BestTime live");
     expect(s).toContain("Unusually busy");
-    expect(s).toContain("Dubai Mall");
+    expect(s).toContain('<a href="https://www.google.com/maps/search/?api=1&amp;query=25.1975%2C55.2796">Dubai Mall</a>');
     expect(s).toContain("usually 60%");
+    expect(s).toContain("Downtown Cam");
   });
 
   it("says so when nothing is unusual", () => {

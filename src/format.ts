@@ -1,4 +1,4 @@
-import type { CrowdData, PlaceInfo, TrafficData, TransitData } from "./types";
+import type { CrowdData, CrowdVenue, PlaceInfo, TrafficData, TransitData } from "./types";
 
 export function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -85,6 +85,20 @@ export function formatTransit(data: TransitData, place: PlaceInfo, provider: str
   return lines.join("\n");
 }
 
+/** Google Maps link for a venue — exact pin when we have coordinates. */
+export function mapsUrl(v: CrowdVenue, place?: PlaceInfo): string {
+  const query =
+    v.lat != null && v.lon != null
+      ? `${v.lat},${v.lon}`
+      : `${v.name} ${place?.city ?? place?.emirate ?? "UAE"}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function venueLink(v: CrowdVenue, place: PlaceInfo): string {
+  const href = mapsUrl(v, place).replace(/&/g, "&amp;");
+  return `<a href="${href}">${escapeHtml(v.name)}</a>`;
+}
+
 export function formatCrowds(data: CrowdData, place: PlaceInfo, provider: string): string {
   const lines = [`👥 <b>Crowds near ${placeLine(place)}</b>`, ""];
   const unusual = data.venues.filter((v) => v.unusuallyBusy);
@@ -94,7 +108,7 @@ export function formatCrowds(data: CrowdData, place: PlaceInfo, provider: string
       const pct = v.liveBusyness != null ? ` — ${v.liveBusyness}% busy` : "";
       const vs =
         v.usualBusyness != null ? ` (usually ${v.usualBusyness}% at this hour)` : "";
-      lines.push(`🔥 <b>${escapeHtml(v.name)}</b>${pct}${vs}`);
+      lines.push(`🔥 <b>${venueLink(v, place)}</b>${pct}${vs}`);
     }
     lines.push("");
   }
@@ -103,10 +117,16 @@ export function formatCrowds(data: CrowdData, place: PlaceInfo, provider: string
     lines.push("Other spots:");
     for (const v of rest) {
       const pct = v.liveBusyness != null ? ` — ${v.liveBusyness}%` : "";
-      lines.push(`· ${escapeHtml(v.name)}${pct}`);
+      lines.push(`· ${venueLink(v, place)}${pct}`);
     }
   }
   if (unusual.length === 0) lines.push("😌 Nothing looks unusually crowded right now.");
+  if (data.webcams && data.webcams.length > 0) {
+    lines.push("", "📷 <b>See for yourself — live webcams:</b>");
+    for (const w of data.webcams) {
+      lines.push(`· <a href="${w.url.replace(/&/g, "&amp;")}">${escapeHtml(w.title)}</a>`);
+    }
+  }
   if (data.note) lines.push("", `<i>${escapeHtml(data.note)}</i>`);
   lines.push(`<i>Source: ${escapeHtml(provider)}${data.estimated ? " · estimated" : ""}</i>`);
   return lines.join("\n");

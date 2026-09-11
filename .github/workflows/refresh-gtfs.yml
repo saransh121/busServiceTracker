@@ -1,0 +1,39 @@
+name: Refresh RTA GTFS index
+
+on:
+  schedule:
+    - cron: "0 3 1 * *" # 03:00 UTC on the 1st of every month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download latest Dubai RTA GTFS (open data republish)
+        run: |
+          curl -sSL -o gtfs.zip "https://gitlab.com/Lach-anonym/dubai-gtfs/-/jobs/artifacts/main/raw/gtfs.zip?job=download-republish-gtfs"
+          unzip -o -q gtfs.zip -d gtfs
+
+      - name: Rebuild index and shards
+        run: node scripts/build-rta-index.mjs gtfs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "GTFS unchanged — nothing to commit"
+          else
+            git commit -m "chore: monthly RTA GTFS index refresh"
+            git push
+          fi

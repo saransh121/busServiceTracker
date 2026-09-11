@@ -4,6 +4,8 @@ import { USER_AGENT } from "../../config";
 export interface VenueLite {
   name: string;
   address?: string;
+  lat?: number;
+  lon?: number;
 }
 
 /**
@@ -25,11 +27,18 @@ export async function nearbyVenues(
         `?categories=${categories}&filter=circle:${lon},${lat},1800&limit=${limit}&apiKey=${geoapifyKey}`;
       const res = await fetchOk(url);
       const json = (await res.json()) as {
-        features?: Array<{ properties?: { name?: string; address_line2?: string } }>;
+        features?: Array<{
+          properties?: { name?: string; address_line2?: string; lat?: number; lon?: number };
+        }>;
       };
       const venues = (json.features ?? [])
         .filter((f) => f.properties?.name)
-        .map((f) => ({ name: f.properties!.name!, address: f.properties?.address_line2 }));
+        .map((f) => ({
+          name: f.properties!.name!,
+          address: f.properties?.address_line2,
+          lat: f.properties?.lat,
+          lon: f.properties?.lon,
+        }));
       if (venues.length > 0) return venues;
     } catch {
       // fall through to OSM
@@ -48,7 +57,12 @@ export async function nearbyVenues(
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = (await res.json()) as {
-    elements?: Array<{ tags?: { name?: string; shop?: string; tourism?: string } }>;
+    elements?: Array<{
+      lat?: number;
+      lon?: number;
+      center?: { lat: number; lon: number };
+      tags?: { name?: string; shop?: string; tourism?: string };
+    }>;
   };
   const seen = new Set<string>();
   const venues: VenueLite[] = [];
@@ -61,7 +75,7 @@ export async function nearbyVenues(
     const name = e.tags?.name;
     if (name && !seen.has(name)) {
       seen.add(name);
-      venues.push({ name });
+      venues.push({ name, lat: e.lat ?? e.center?.lat, lon: e.lon ?? e.center?.lon });
       if (venues.length >= limit) break;
     }
   }

@@ -19,6 +19,9 @@ async function chargeBudget(kv: KVLike): Promise<void> {
 interface BestTimeVenue {
   venue_name?: string;
   venue_address?: string;
+  venue_lat?: number;
+  venue_lon?: number;
+  venue_lng?: number;
   venue_foot_traffic_live?: number;
   venue_foot_traffic_forecast?: number;
   venue_live_busyness?: number;
@@ -36,6 +39,8 @@ function parseVenues(raw: unknown): CrowdVenue[] {
       return {
         name: v.venue_name ?? "Venue",
         address: v.venue_address,
+        lat: v.venue_lat,
+        lon: v.venue_lon ?? v.venue_lng,
         liveBusyness: live,
         usualBusyness: usual,
         unusuallyBusy: usual != null ? live >= usual + 15 : live >= 75,

@@ -14,7 +14,7 @@
  *   deps:      per stop, flat quadruples [dowMask, minuteOfDay, routeIdx, headsignIdx, ...]
  *   dowMask bit0 = Monday ... bit6 = Sunday
  */
-import { createReadStream, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createReadStream, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { gzipSync } from "node:zlib";
 
@@ -168,3 +168,47 @@ mkdirSync("data", { recursive: true });
 const gz = gzipSync(JSON.stringify(index), { level: 9 });
 writeFileSync("data/rta-index.json.gz", gz);
 console.log(`wrote data/rta-index.json.gz (${(gz.length / 1e6).toFixed(1)} MB gzipped)`);
+
+// ── Per-area shards for the Cloudflare Workers deployment ────────────────────
+// Cell key = floor(lat*20)_floor(lon*20) (0.05° ≈ 5.5 km squares). The Worker
+// fetches the 3x3 cells around the user from GitHub raw — each shard is small
+// enough to parse within Workers CPU limits, unlike the full index.
+rmSync("data/shards", { recursive: true, force: true });
+mkdirSync("data/shards", { recursive: true });
+const cells = new Map(); // key -> stop indices
+stops.forEach(([, lat, lon], i) => {
+  if (deps[i].length === 0) return;
+  const key = `${Math.floor(lat * 20)}_${Math.floor(lon * 20)}`;
+  if (!cells.has(key)) cells.set(key, []);
+  cells.get(key).push(i);
+});
+let shardCount = 0;
+for (const [key, stopIdxs] of cells) {
+  // re-intern routes/headsigns locally so each shard is self-contained
+  const localRoutes = [];
+  const localRouteIdx = new Map();
+  const localHeads = [];
+  const localHeadIdx = new Map();
+  const shardStops = [];
+  const shardDeps = [];
+  for (const i of stopIdxs) {
+    shardStops.push(stops[i]);
+    const d = deps[i];
+    const out = [];
+    for (let k = 0; k < d.length; k += 4) {
+      out.push(
+        d[k],
+        d[k + 1],
+        intern(localRoutes, localRouteIdx, routes[d[k + 2]]),
+        intern(localHeads, localHeadIdx, headsigns[d[k + 3]]),
+      );
+    }
+    shardDeps.push(out);
+  }
+  writeFileSync(
+    `data/shards/${key}.json`,
+    JSON.stringify({ routes: localRoutes, headsigns: localHeads, stops: shardStops, deps: shardDeps }),
+  );
+  shardCount++;
+}
+console.log(`wrote ${shardCount} shards to data/shards/`);

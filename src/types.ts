@@ -47,6 +47,8 @@ export interface TransitData {
 export interface CrowdVenue {
   name: string;
   address?: string;
+  lat?: number;
+  lon?: number;
   /** 0-100 live busyness if known */
   liveBusyness?: number;
   /** 0-100 typical busyness for this hour if known */
@@ -55,10 +57,17 @@ export interface CrowdVenue {
   estimated: boolean;
 }
 
+export interface Webcam {
+  title: string;
+  url: string;
+}
+
 export interface CrowdData {
   venues: CrowdVenue[];
   estimated: boolean;
   note?: string;
+  /** Live webcams near the location — real eyes on the ground. */
+  webcams?: Webcam[];
 }
 
 // ---- Geocode ----

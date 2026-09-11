@@ -29,6 +29,8 @@ export async function heuristicCrowds(
     return {
       name: v.name,
       address: v.address,
+      lat: v.lat,
+      lon: v.lon,
       liveBusyness: score,
       unusuallyBusy: score >= 70,
       estimated: true,

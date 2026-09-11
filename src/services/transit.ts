@@ -5,6 +5,7 @@ import { geohash } from "../core/geo";
 import { hereTransitDepartures } from "../providers/transit/hereTransit";
 import { osmNearbyStops } from "../providers/transit/osmStops";
 import { rtaGtfsDepartures } from "../providers/transit/rtaGtfs";
+import { rtaShardDepartures } from "../providers/transit/rtaShards";
 import { transitlandDepartures } from "../providers/transit/transitland";
 import type { TransitData } from "../types";
 
@@ -34,14 +35,20 @@ export async function getTransit(
       name: "RTA GTFS (local index)",
       fn: () => rtaGtfsDepartures(lat, lon),
     };
+    // Same data served from GitHub raw — this is how the Workers deployment
+    // (which can't bundle the 4MB index) still gets Dubai departures.
+    const rtaRemote: Provider<TransitData> = {
+      name: "RTA GTFS (shards)",
+      fn: () => rtaShardDepartures(lat, lon),
+    };
     if (/dubai/i.test(emirate)) {
-      providers.push(rtaLocal); // freshest Dubai timetable we have, zero keys
+      providers.push(rtaLocal, rtaRemote); // freshest Dubai timetable we have, zero keys
       if (transitland) providers.push(transitland);
       if (here) providers.push(here);
     } else {
       if (here) providers.push(here);
       if (transitland) providers.push(transitland);
-      providers.push(rtaLocal);
+      providers.push(rtaLocal, rtaRemote);
     }
     providers.push({ name: "OpenStreetMap", fn: () => osmNearbyStops(lat, lon) });
     return withFallback(providers, 8000);

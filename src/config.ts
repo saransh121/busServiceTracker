@@ -9,6 +9,7 @@ export interface Env {
   BESTTIME_KEY?: string;
   GEOAPIFY_KEY?: string;
   MAPBOX_TOKEN?: string;
+  WINDY_KEY?: string;
   PULSE_KV?: KVLike;
 }
 

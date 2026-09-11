@@ -9,5 +9,6 @@ TRANSITLAND_KEY=                                      # transit.land — free AP
 BESTTIME_KEY=                                         # besttime.app — private key, ~100 free credits
 GEOAPIFY_KEY=                                         # geoapify.com — 3,000 req/day free (crowd heuristic POIs)
 MAPBOX_TOKEN=                                         # mapbox.com — live-traffic map snapshot (navigation style)
+WINDY_KEY=                                            # api.windy.com/webcams — free key, live webcam links in crowd replies
 # Production webhook protection (any random string; also passed to setWebhook)
 WEBHOOK_SECRET=

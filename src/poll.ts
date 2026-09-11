@@ -68,6 +68,7 @@ const env: Env = {
   BESTTIME_KEY: vars.BESTTIME_KEY,
   GEOAPIFY_KEY: vars.GEOAPIFY_KEY,
   MAPBOX_TOKEN: vars.MAPBOX_TOKEN,
+  WINDY_KEY: vars.WINDY_KEY,
 };
 
 const bot = createBot(env, new FileKV());

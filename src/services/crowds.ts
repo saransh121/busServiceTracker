@@ -5,6 +5,7 @@ import { geohash } from "../core/geo";
 import { besttimeCrowds } from "../providers/crowds/besttime";
 import { googleBusyCrowds } from "../providers/crowds/googleBusy";
 import { heuristicCrowds } from "../providers/crowds/heuristic";
+import { windyWebcams } from "../providers/crowds/windy";
 import type { CrowdData, PlaceInfo, TrafficData } from "../types";
 
 /**
@@ -38,6 +39,13 @@ export async function getCrowds(
       fn: () => heuristicCrowds(env.GEOAPIFY_KEY, lat, lon, traffic),
     });
     // BestTime polls an async job and the scraper visits several pages
-    return withFallback(providers, 25000);
+    return (async () => {
+      const [result, webcams] = await Promise.all([
+        withFallback(providers, 25000),
+        windyWebcams(env.WINDY_KEY, lat, lon),
+      ]);
+      if (webcams.length > 0) result.data.webcams = webcams;
+      return result;
+    })();
   });
 }
