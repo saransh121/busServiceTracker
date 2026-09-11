@@ -6,9 +6,6 @@ name = "uae-pulse-bot"
 main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
-# Create with: npx wrangler kv namespace create PULSE_KV
-# then paste the generated id below. The bot still works without KV
-# (falls back to per-instance memory cache), but KV stretches free API quotas.
-# [[kv_namespaces]]
-# binding = "PULSE_KV"
-# id = "PASTE_KV_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding = "PULSE_KV"
+id = "09ef80f63ada42d28b4eacfaf6c71598"
