@@ -4,6 +4,7 @@ import { withFallback, type FallbackResult, type Provider } from "../core/fallba
 import { geohash } from "../core/geo";
 import { hereTransitDepartures } from "../providers/transit/hereTransit";
 import { osmNearbyStops } from "../providers/transit/osmStops";
+import { rtaGtfsDepartures } from "../providers/transit/rtaGtfs";
 import { transitlandDepartures } from "../providers/transit/transitland";
 import type { TransitData } from "../types";
 
@@ -29,12 +30,18 @@ export async function getTransit(
       ? { name: "HERE Transit", fn: () => hereTransitDepartures(env.HERE_KEY!, lat, lon) }
       : null;
 
+    const rtaLocal: Provider<TransitData> = {
+      name: "RTA GTFS (local index)",
+      fn: () => rtaGtfsDepartures(lat, lon),
+    };
     if (/dubai/i.test(emirate)) {
+      providers.push(rtaLocal); // freshest Dubai timetable we have, zero keys
       if (transitland) providers.push(transitland);
       if (here) providers.push(here);
     } else {
       if (here) providers.push(here);
       if (transitland) providers.push(transitland);
+      providers.push(rtaLocal);
     }
     providers.push({ name: "OpenStreetMap", fn: () => osmNearbyStops(lat, lon) });
     return withFallback(providers, 8000);
