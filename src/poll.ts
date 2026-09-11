@@ -3,10 +3,43 @@
  * Reads .dev.vars (same file wrangler uses) so one config serves both modes.
  *   npm run dev:poll
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { createBot } from "./bot/handlers";
 import type { Env } from "./config";
-import { MemoryKV } from "./core/cache";
+import { MemoryKV, type KVLike } from "./core/cache";
+
+/** MemoryKV that survives restarts by mirroring to a local JSON file. */
+class FileKV extends MemoryKV implements KVLike {
+  private file = ".kv-store.json";
+
+  constructor() {
+    super();
+    try {
+      const saved = JSON.parse(readFileSync(this.file, "utf8")) as Record<
+        string,
+        { value: string; expiresAt: number }
+      >;
+      for (const [k, e] of Object.entries(saved)) {
+        if (e.expiresAt === 0 || Date.now() < e.expiresAt) {
+          void super.put(k, e.value, {
+            expirationTtl: e.expiresAt ? Math.ceil((e.expiresAt - Date.now()) / 1000) : undefined,
+          });
+        }
+      }
+    } catch {
+      /* first run */
+    }
+  }
+
+  override async put(key: string, value: string, opts?: { expirationTtl?: number }) {
+    await super.put(key, value, opts);
+    try {
+      writeFileSync(this.file, JSON.stringify(Object.fromEntries(this.store)));
+    } catch {
+      /* persistence is best-effort */
+    }
+  }
+}
 
 function loadDevVars(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -37,6 +70,6 @@ const env: Env = {
   MAPBOX_TOKEN: vars.MAPBOX_TOKEN,
 };
 
-const bot = createBot(env, new MemoryKV());
+const bot = createBot(env, new FileKV());
 console.log("UAE Pulse bot running in polling mode — press Ctrl+C to stop.");
 bot.start({ onStart: (me) => console.log(`Logged in as @${me.username}`) });

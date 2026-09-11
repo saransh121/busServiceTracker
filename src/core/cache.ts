@@ -6,7 +6,7 @@ export interface KVLike {
 
 /** In-memory stand-in for local polling dev / when no KV namespace is bound. */
 export class MemoryKV implements KVLike {
-  private store = new Map<string, { value: string; expiresAt: number }>();
+  protected store = new Map<string, { value: string; expiresAt: number }>();
 
   async get(key: string): Promise<string | null> {
     const e = this.store.get(key);

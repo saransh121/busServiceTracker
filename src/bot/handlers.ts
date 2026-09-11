@@ -95,15 +95,18 @@ export function createBot(env: Env, kv: KVLike): Bot {
     const chatId = ctx.chat?.id;
     if (!chatId) return ctx.answerCallbackQuery();
 
+    // answering can fail if the tap is stale (e.g. sent while the bot was down) — never fatal
+    const answer = (text: string) => ctx.answerCallbackQuery({ text }).catch(() => {});
+
     const loc = await loadLocation(kv, chatId);
     if (!loc) {
-      await ctx.answerCallbackQuery({ text: "Your location expired — share it again." });
+      await answer("Your location expired — share it again.");
       await ctx.reply("Share your location again 👇 (kept only 1 hour)", {
         reply_markup: shareKeyboard,
       });
       return;
     }
-    await ctx.answerCallbackQuery({ text: "⏳ Fetching live data…" });
+    await answer("⏳ Fetching live data…");
 
     const wants = action === "all" ? ["traffic", "transit", "crowds"] : [action];
     const place = await getPlace(env, kv, loc.lat, loc.lon).catch(() => ({ emirate: "UAE" }));
