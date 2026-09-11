@@ -18,7 +18,8 @@ The bot sends a Telegram keyboard button built with `request_location`. You tap 
 |---|---|---|---|
 | Traffic | TomTom (live) | HERE (live) | Waze live-map feed — keyless, unofficial, often blocked |
 | Traffic map | Mapbox navigation style (live traffic colors) | TomTom static map | text only |
-| Transit | Transitland — Dubai RTA GTFS (Dubai) | HERE Transit (other emirates) | Nearest stops from OpenStreetMap + official app links |
+| Transit (Dubai) | **Local RTA GTFS index** — real scheduled departures, zero keys (`data/rta-index.json.gz`, rebuild with `scripts/build-rta-index.mjs`) | Transitland, HERE Transit | Nearest stops from OpenStreetMap + official app links |
+| Transit (other emirates) | HERE Transit (note: HERE signup now asks for a credit card — optional) | Local RTA index | Nearest stops from OpenStreetMap + official app links |
 | Crowds | BestTime.app live foot traffic (budget-guarded) | 🔥 "Nuke option": scrape Google's "Currently X% busy" from search results — unofficial, ToS-gray, bails instantly when captcha-blocked | Estimated: POIs (Geoapify, or keyless OSM) + live congestion + time-of-day |
 | Reverse geocode | Nominatim (OSM) | TomTom | offline emirate bounding boxes |
 
